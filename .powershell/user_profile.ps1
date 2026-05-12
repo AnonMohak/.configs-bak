@@ -1,5 +1,6 @@
 # Prompt
 oh-my-posh init pwsh --config "$HOME\.config\powershell\mohak.omp.json" | Invoke-Expression
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
 # Alias 
 Set-Alias vim nvim 
