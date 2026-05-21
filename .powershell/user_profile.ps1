@@ -11,6 +11,10 @@ set-Alias g git
 set-Alias grep findstr
 set-Alias tig 'C:\Program Files\Git\usr\bin\tig.exe'
 set-Alias less 'C:\Program Files\Git\usr\bin\less.exe'
+Remove-Item Alias:curl -ErrorAction SilentlyContinue
+Set-Alias curl curl.exe
+Remove-Item Alias:wget -ErrorAction SilentlyContinue
+Set-Alias wget wget.exe
 
 
 # Custom
