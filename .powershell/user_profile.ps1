@@ -112,7 +112,7 @@ function where {
 }
 
 # gemini cli code
-function ai{ gemini }
+function ai{ codex }
 
 # copies the pwd
 function Copy-Path { (Get-Location).Path | clip }
