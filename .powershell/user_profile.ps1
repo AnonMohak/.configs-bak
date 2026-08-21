@@ -117,3 +117,6 @@ function ai{ codex }
 # copies the pwd
 function Copy-Path { (Get-Location).Path | clip }
 Set-Alias cpath Copy-Path
+
+# returns immediate children for the dir 
+function peek { Get-ChildItem -Force @args }
