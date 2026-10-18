@@ -9,3 +9,7 @@ vim.opt.tabstop = 2
 vim.opt.smartindent = true
 vim.opt.conceallevel = 2
 vim.opt.guicursor = ""
+vim.opt.foldmethod="expr"
+vim.opt.foldexpr="v:lua.vim.treesitter.foldexpr()"
+vim.opt.foldenable=true
+vim.opt.foldlevel=99

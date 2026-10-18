@@ -5,16 +5,15 @@ Invoke-Expression (& { (zoxide init powershell | Out-String) })
 # Alias 
 Set-Alias vim nvim 
 Set-Alias vi nvim
-set-Alias ll ls
+#set-Alias ll ls
 set-Alias py python
 set-Alias g git
 set-Alias grep findstr
 set-Alias tig 'C:\Program Files\Git\usr\bin\tig.exe'
 set-Alias less 'C:\Program Files\Git\usr\bin\less.exe'
 Remove-Item Alias:curl -ErrorAction SilentlyContinue
-Set-Alias curl curl.exe
 Remove-Item Alias:wget -ErrorAction SilentlyContinue
-Set-Alias wget wget.exe
+Remove-Item Alias:where -Force  -ErrorAction SilentlyContinue
 
 
 # Custom
@@ -106,12 +105,8 @@ function mkcd {
     Set-Location $dir
 }
 
-# returns path of specified file
-function where {
-    & "$env:WINDIR\System32\where.exe" @args
-}
 
-# gemini cli code
+# cli code
 function ai{ codex }
 
 # copies the pwd
@@ -120,3 +115,44 @@ Set-Alias cpath Copy-Path
 
 # returns immediate children for the dir 
 function peek { Get-ChildItem -Force @args }
+
+#runs opencode remotely
+function opencode {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$Args
+    )
+
+    $opencodeCmd = (Get-Command opencode.cmd -CommandType Application -ErrorAction Stop).Source
+
+    if ($Args.Count -gt 0 -and $Args[0] -eq "remote") {
+        & $opencodeCmd serve --hostname 0.0.0.0 --port 4096
+        return
+    }
+
+    & $opencodeCmd @Args
+}
+
+#set curl,wget, where as fn 
+function curl {
+    curl.exe @args
+}
+
+function wget {
+    wget.exe @args
+}
+
+function where {
+    where.exe @args
+}
+
+#kills all node and bun open ports
+function stop-ports {
+    Stop-Process -Name node -Force -ErrorAction SilentlyContinue
+    Stop-Process -Name bun -Force -ErrorAction SilentlyContinue
+}
+
+#better ls
+function ll {
+    eza --icons --grid --group-directories-first @args
+}
