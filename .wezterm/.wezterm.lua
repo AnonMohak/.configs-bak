@@ -90,4 +90,19 @@ wezterm.on("gui-startup", function(cmd)
   window:gui_window():toggle_fullscreen()
 end)
 
+-- typer (typing test): bigger font while it runs.
+-- typer sets the user var typer_active to "1" at start and "0" at exit.
+wezterm.on("user-var-changed", function(window, pane, name, value)
+  if name ~= "typer_active" then
+    return
+  end
+  local overrides = window:get_config_overrides() or {}
+  if value == "1" then
+    overrides.font_size = config.font_size + 2
+  else
+    overrides.font_size = nil
+  end
+  window:set_config_overrides(overrides)
+end)
+
 return config
