@@ -103,18 +103,6 @@ end)
 
 -- dakken (typing test): bigger font while it runs.
 -- dakken sets the user var dakken_active to "1" at start and "0" at exit.
-wezterm.on("user-var-changed", function(window, pane, name, value)
-  if name ~= "dakken_active" then
-    return
-  end
-  local overrides = window:get_config_overrides() or {}
-  if value == "1" then
-    overrides.font_size = config.font_size + 2
-  else
-    overrides.font_size = nil
-  end
-  window:set_config_overrides(overrides)
-end)
 
 config.tab_max_width = 24
 
