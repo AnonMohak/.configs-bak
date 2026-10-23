@@ -181,7 +181,10 @@ local function tab_text(title, process, cwd)
     return short_cwd(cwd) or 'pwsh'
   end
   -- keep only the last word of the title, for example "wezterm.lua"
-  return title:match('([^%s\\/]+)%s*$') or title
+  -- OLD (replaced below): return title:match('([^%s\\/]+)%s*$') or title
+  -- and drop a trailing ".exe", for example "cargo.exe" becomes "cargo"
+  local word = title:match('([^%s\\/]+)%s*$') or title
+  return (word:gsub('%.[eE][xX][eE]$', ''))
 end
 
 wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_width)
