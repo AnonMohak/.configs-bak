@@ -2,6 +2,34 @@
 oh-my-posh init pwsh --config "$HOME\.config\powershell\mohak.omp.json" | Invoke-Expression
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
+# tell WezTerm what runs in this tab (user var "prog"), so the tab bar does not read the process tree
+function Set-WezTermProg([string]$name) {
+    $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($name))
+    [Console]::Write("`e]1337;SetUserVar=prog=$b64`a")
+}
+
+# at each prompt the shell is idle. oh-my-posh calls only its own Set-PoshContext (inside its module),
+# so wrap its prompt function instead. Call it first, so it still sees $? of the last command
+$global:OmpPrompt = $function:prompt
+function global:prompt {
+    $p = & $global:OmpPrompt
+    Set-WezTermProg ''
+    $p
+}
+
+# on Enter: send the name of the program, for example "nvim" or "cargo".
+# cmdlets, functions and aliases (ls, z, cd) run inside pwsh, so send '' and keep the folder name
+Set-PSReadLineKeyHandler -Key Enter -ScriptBlock {
+    $line = $null; $cursor = $null
+    [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
+    $word = ($line.Trim() -split '\s+')[0]
+    $cmd = if ($word) { Get-Command $word -ErrorAction SilentlyContinue | Select-Object -First 1 }
+    if ($cmd.CommandType -eq 'Alias') { $cmd = $cmd.ResolvedCommand }
+    $name = if ($cmd.CommandType -eq 'Application') { [IO.Path]::GetFileNameWithoutExtension($cmd.Name) } else { '' }
+    Set-WezTermProg $name
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
+
 # Alias 
 Set-Alias vim nvim 
 Set-Alias vi nvim

@@ -163,33 +163,53 @@ local function short_cwd(cwd)
   return folder and ('./' .. folder) or nil
 end
 
+-- OLD (replaced below): -- the text for one tab; used by the tab bar and by the centering code
+-- OLD (replaced below): local function tab_text(title, process, cwd)
+-- OLD (replaced below):   title = title or ''
+-- OLD (replaced below):   process = (process or ''):lower()
+-- OLD (replaced below):   if process:find('claude') or (title:byte(1) or 0) >= 128 then
+-- OLD (replaced below):     -- Claude Code puts its logo as the first character of the title
+-- OLD (replaced below):     local icon = title:match('^' .. utf8.charpattern) or ''
+-- OLD (replaced below):     return icon .. ' claude'
+-- OLD (replaced below):   elseif process:find('nvim') then
+-- OLD (replaced below):     return 'nvim'
+-- OLD (replaced below):   -- oh-my-posh and zoxide run briefly inside pwsh at startup and at each prompt
+-- OLD (replaced below):   elseif process:find('pwsh') or process:find('powershell') or process:find('cmd%.exe')
+-- OLD (replaced below):       or process:find('oh%-my%-posh') or process:find('zoxide') then
+-- OLD (replaced below):     -- shell tab: show the folder
+-- OLD (replaced below):     return short_cwd(cwd) or 'pwsh'
+-- OLD (replaced below):   end
+-- OLD (replaced below):   -- keep only the last word of the title, for example "wezterm.lua"
+-- OLD (replaced below):   -- and drop a trailing ".exe", for example "cargo.exe" becomes "cargo"
+-- OLD (replaced below):   local word = title:match('([^%s\\/]+)%s*$') or title
+-- OLD (replaced below):   return (word:gsub('%.[eE][xX][eE]$', ''))
+-- OLD (replaced below): end
+
 -- the text for one tab; used by the tab bar and by the centering code
-local function tab_text(title, process, cwd)
+-- prog is the user var that pwsh sets (user_profile.ps1): '' at the prompt, else the command name.
+-- the process name is not used: reading the process tree crashed wezterm 20240203 (procinfo stack overflow)
+local function tab_text(title, prog, cwd)
   title = title or ''
-  process = (process or ''):lower()
-  if process:find('claude') or (title:byte(1) or 0) >= 128 then
+  if (title:byte(1) or 0) >= 128 or (prog or ''):lower():find('claude') then
     -- Claude Code puts its logo as the first character of the title
     local icon = title:match('^' .. utf8.charpattern) or ''
     return icon .. ' claude'
-  elseif process:find('nvim') then
-    return 'nvim'
-  -- OLD (replaced below): elseif process:find('pwsh') or process:find('powershell') or process:find('cmd%.exe') then
-  -- oh-my-posh and zoxide run briefly inside pwsh at startup and at each prompt
-  elseif process:find('pwsh') or process:find('powershell') or process:find('cmd%.exe')
-      or process:find('oh%-my%-posh') or process:find('zoxide') then
-    -- shell tab: show the folder
+  elseif prog == '' then
+    -- shell is idle at the prompt: show the folder
     return short_cwd(cwd) or 'pwsh'
+  elseif prog then
+    -- the command from the prompt, for example "nvim" or "cargo"
+    return prog
   end
-  -- keep only the last word of the title, for example "wezterm.lua"
-  -- OLD (replaced below): return title:match('([^%s\\/]+)%s*$') or title
-  -- and drop a trailing ".exe", for example "cargo.exe" becomes "cargo"
+  -- no user var (the pane does not run pwsh): last word of the title, without ".exe"
   local word = title:match('([^%s\\/]+)%s*$') or title
   return (word:gsub('%.[eE][xX][eE]$', ''))
 end
 
 wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_width)
   local pane = tab.active_pane
-  local text = tab_text(pane.title, pane.foreground_process_name, pane.current_working_dir)
+  -- OLD (replaced below): local text = tab_text(pane.title, pane.foreground_process_name, pane.current_working_dir)
+  local text = tab_text(pane.title, pane.user_vars.prog, pane.current_working_dir)
   local fg = (tab.is_active or hover) and tab_active_fg or tab_inactive_fg
   return {
     { Foreground = { Color = tab_inactive_fg } },
@@ -213,7 +233,8 @@ wezterm.on('update-status', function(window, pane)
   local total = 0
   for i, t in ipairs(tabs) do
     local p = t:active_pane()
-    local text = tab_text(p:get_title(), p:get_foreground_process_name(), p:get_current_working_dir())
+    -- OLD (replaced below): local text = tab_text(p:get_title(), p:get_foreground_process_name(), p:get_current_working_dir())
+    local text = tab_text(p:get_title(), p:get_user_vars().prog, p:get_current_working_dir())
     if i > 1 then text = tab_separator .. text end
     total = total + math.min(wezterm.column_width(text), config.tab_max_width)
   end
