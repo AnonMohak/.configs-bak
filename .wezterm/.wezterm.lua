@@ -101,8 +101,6 @@ wezterm.on("gui-startup", function(cmd)
   window:gui_window():toggle_fullscreen()
 end)
 
--- dakken (typing test): bigger font while it runs.
--- dakken sets the user var dakken_active to "1" at start and "0" at exit.
 
 config.tab_max_width = 24
 
