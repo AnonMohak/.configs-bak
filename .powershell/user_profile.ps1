@@ -199,3 +199,7 @@ function check {
 function lg {
     lazygit
 }
+
+#better cat
+Remove-Item Alias:cat -Force -ErrorAction SilentlyContinue
+function cat { bat.exe @args }
