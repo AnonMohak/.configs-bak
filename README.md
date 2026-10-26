@@ -1,8 +1,55 @@
-# Configs Backup
+# .configs-bak
 
-An automatic backup of my Neovim, PowerShell, and WezTerm configs (Windows).
-A scheduled task copies the live configs into this repo every 15 minutes.
-If something changed, the task commits and pushes the changes to GitHub.
+Automatic Git backup of Neovim, PowerShell, and WezTerm configs on Windows.
+
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D6)
+![PowerShell](https://img.shields.io/badge/PowerShell-7-5391FE)
+![Neovim](https://img.shields.io/badge/Neovim-Lua-57A143)
+![WezTerm](https://img.shields.io/badge/WezTerm-Lua-4E49EE)
+
+Most dotfile tools assume Linux or macOS and symlinks.
+This repo uses two small PowerShell scripts and the Windows Task Scheduler instead.
+Every 15 minutes, it copies the live configs here, then commits and pushes the changes.
+You edit your configs in the usual place. The history is saved on GitHub without extra work.
+
+## Features
+
+- **No symlinks.** The live configs stay where the tools expect them. The repo holds a copy.
+- **Runs in the background.** A scheduled task starts at logon and every 15 minutes. No window opens.
+- **No noise.** If nothing changed, no commit is made.
+- **Readable history.** Each commit names the configs that changed, for example
+  `sync: 2026-10-23 21:27 (powershell, wezterm)`.
+- **Mirror copy.** A file that you delete from a live config is also deleted from the backup.
+- **Small.** Two scripts, no dependencies except PowerShell 7 and Git.
+- **Works for any tool.** Add a line to `.env` and a name to `sync.ps1` to back up another config.
+
+## Quick start
+
+Requirements: Windows 10/11, PowerShell 7 (`pwsh`), and Git that can push without a prompt
+(for example Git Credential Manager, or `gh auth login`).
+
+```powershell
+git clone https://github.com/<you>/.configs-bak.git
+cd .configs-bak
+Remove-Item -Recurse .neovim, .powershell, .wezterm   # remove my backups
+notepad .env                                           # add your paths (see below)
+pwsh -NoProfile -File .\sync.ps1                       # run one sync, then check sync.log
+pwsh -NoProfile -File .\register-task.ps1              # install the scheduled task
+```
+
+> [!WARNING]
+> Do not back up files that contain secrets, such as API keys or tokens.
+> If your repo is public, everyone can read every synced file and its full history.
+
+The full steps are in [Use it yourself](#use-it-yourself).
+
+## What is in my setup
+
+| Tool | Highlights |
+|---|---|
+| **Neovim** | [lazy.nvim](https://github.com/folke/lazy.nvim), tokyonight, LSP with mason, nvim-cmp, Treesitter, Telescope, neo-tree and oil, Neogit with diffview and gitsigns, snacks dashboard with One Piece art, claudecode.nvim |
+| **PowerShell** | oh-my-posh prompt (`mohak.omp.json`), zoxide, WezTerm tab title integration |
+| **WezTerm** | JetBrainsMono Nerd Font, tokyonight_night, `pwsh` as the default shell, pane and tab keybindings |
 
 ## File structure
 
@@ -53,9 +100,6 @@ A path can be a directory or a single file.
 
 ## Use it yourself
 
-Requirements: Windows 10/11, PowerShell 7 (`pwsh`), and Git.
-Git must be able to push without a prompt (for example Git Credential Manager, or `gh auth login`).
-
 1. Fork this repo, or make a new repo, and clone it:
    ```
    git clone https://github.com/<you>/.configs-bak.git
@@ -89,6 +133,18 @@ Git must be able to push without a prompt (for example Git Credential Manager, o
 
 To change the interval, edit `-Minutes 15` in `register-task.ps1` and run it again.
 
+## Troubleshooting
+
+Look in `sync.log` first. Each sync that fails writes a line that starts with `ERROR:`.
+
+| Problem | Fix |
+|---|---|
+| `ERROR: git push failed` | Git cannot push without a prompt. Run `git push` once by hand and log in, or run `gh auth login`. |
+| `skip <name>: source '...' not found` | The path in `.env` is wrong, or the name is missing from `.env`. |
+| `robocopy failed for <name>` | A file in the source is locked or you have no access. Close the tool and run a sync again. |
+| No new commits, no errors | Nothing changed, or the task does not run. Check `Get-ScheduledTaskInfo ConfigsBackupSync`. |
+| The task stopped after a PowerShell update | Run `register-task.ps1` again to update the path of `pwsh.exe`. |
+
 ## Restore
 
 Copy the backup back to its source path. For example:
@@ -96,4 +152,8 @@ Copy the backup back to its source path. For example:
 ```powershell
 robocopy .\.neovim $env:LOCALAPPDATA\nvim /E
 Copy-Item .\.wezterm\.wezterm.lua $HOME\
+Copy-Item .\.powershell\* $HOME\.config\powershell\ -Recurse
 ```
+
+To restore an older version, find the commit with `git log -- .neovim`,
+then run `git checkout <commit> -- .neovim` before you copy.
