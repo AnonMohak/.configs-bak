@@ -184,3 +184,18 @@ function stop-ports {
 function ll {
     eza --icons --grid --group-directories-first @args
 }
+
+#prints img to terminal 
+function img {
+    wezterm imgcat $args
+}
+
+#task manager for terminal 
+function check {
+    btop
+}
+
+#visualise git
+function lg {
+    lazygit
+}
